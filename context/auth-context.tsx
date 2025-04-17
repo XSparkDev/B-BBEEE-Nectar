@@ -17,6 +17,14 @@ type AuthContextType = {
     success: boolean;
     error: any;
   }>;
+  signInWithGoogle: () => Promise<{
+    success: boolean;
+    error: any;
+  }>;
+  signInWithMicrosoft: () => Promise<{
+    success: boolean;
+    error: any;
+  }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{
     success: boolean;
@@ -102,6 +110,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const signInWithGoogle = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+
+      return {
+        success: !error && !!data,
+        error,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error,
+      };
+    }
+  };
+
+  const signInWithMicrosoft = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'azure',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+          scopes: 'email profile openid offline_access user.read',
+          queryParams: {
+            prompt: 'consent',
+            access_type: 'offline'
+          }
+        }
+      });
+
+      return {
+        success: !error && !!data,
+        error,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error,
+      };
+    }
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     router.push('/login');
@@ -131,6 +186,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isLoading,
     signUp,
     signIn,
+    signInWithGoogle,
+    signInWithMicrosoft,
     signOut,
     resetPassword,
   };
